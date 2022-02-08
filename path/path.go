@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/hexops/gotextdiff"
 	"github.com/hexops/gotextdiff/myers"
@@ -30,6 +29,11 @@ func IsDir(path string) bool {
 	return err == nil && info.IsDir()
 }
 
+func IsHidden(path string) bool {
+	name := filepath.Base(path)
+	return len(name) > 0 && name[0] == '.'
+}
+
 func Ls(path string, all bool, recursive bool) (paths []string) {
 	if !IsDir(path) {
 		paths = append(paths, path)
@@ -38,7 +42,7 @@ func Ls(path string, all bool, recursive bool) (paths []string) {
 	if recursive {
 		_ = filepath.Walk(path, func(p string, info os.FileInfo, e error) error {
 			if e == nil && !info.IsDir() {
-				if all || !strings.HasPrefix(".", info.Name()) {
+				if all || !IsHidden(info.Name()) {
 					paths = append(paths, p)
 				}
 			}
@@ -50,7 +54,7 @@ func Ls(path string, all bool, recursive bool) (paths []string) {
 		for _, entry := range entries {
 			if !entry.IsDir() {
 				name := entry.Name()
-				if all || name[0] != '.' {
+				if all || !IsHidden(name) {
 					paths = append(paths, path+string(os.PathSeparator)+name)
 				}
 			}
