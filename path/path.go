@@ -21,6 +21,14 @@ func Exists(path string) bool {
 	return err == nil
 }
 
+func ReadFile(path string) (contents string, err error) {
+	var raw []byte
+	if raw, err = ioutil.ReadFile(path); err == nil {
+		contents = string(raw)
+	}
+	return
+}
+
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
@@ -83,14 +91,13 @@ func Diff(src, dst string) (unified string, err error) {
 		err = fmt.Errorf(`"%v" not found or not a file`, dst)
 		return
 	}
-	var srcBytes, dstBytes []byte
-	if srcBytes, err = ioutil.ReadFile(src); err != nil {
+	var srcString, dstString string
+	if srcString, err = ReadFile(src); err != nil {
 		return
 	}
-	if dstBytes, err = ioutil.ReadFile(dst); err != nil {
+	if dstString, err = ReadFile(dst); err != nil {
 		return
 	}
-	srcString, dstString := string(srcBytes), string(dstBytes)
 	edits := myers.ComputeEdits(span.URIFromPath(src), srcString, dstString)
 	unified = fmt.Sprint(gotextdiff.ToUnified(src, dst, srcString, edits))
 	return
